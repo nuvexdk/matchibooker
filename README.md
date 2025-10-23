@@ -6,4 +6,7 @@ When a tennis time-slot is bookable (only on the same day, earliest at 00:00), m
 book it for you automatically as soon as possible. Set preferred time slots and matchibooker will try to book the prefered ones
 in order if they're still available when the job is executed at 00:00.
 
+## New Feature: Preferred Time Slots
+Configure your preferred time slots by weekday and time (e.g., "Wednesday 20:00-21:00"). The system automatically checks every hour if these slots are available and books them when they become available. See [PREFERRED_SLOTS.md](PREFERRED_SLOTS.md) for details.
+
 Made in Python with Flask, tinyDB and mechanicalsoup (browser and beautifulsoup) 
