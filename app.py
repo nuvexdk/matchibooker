@@ -63,8 +63,8 @@ def add_preferred():
     try:
         preferredslots.add_preferred_slot(weekday, start_time, end_time)
         return redirect(url_for('preferred'))
-    except ValueError as e:
-        return f"Error: {str(e)}", 400
+    except ValueError:
+        return "Error: Invalid weekday specified", 400
 
 
 @app.route("/remove_preferred", methods=["POST"])
