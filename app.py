@@ -1,5 +1,6 @@
 from flask import *
 import slotqueue
+import preferredslots
 import browsing
 import ast
 
@@ -42,6 +43,39 @@ def queued():
         slots_parsed.append(slot_parsed)
         slotqueue.add_entry(slot[0], slot[1], slot[2], slot[3])
     return render_template("queued.html", queued_slots=slots_parsed)
+
+
+@app.route("/preferred")
+def preferred():
+    """Display preferred slots management page"""
+    preferred_slots = preferredslots.get_all_preferred_slots()
+    weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+    return render_template("preferred.html", preferred_slots=preferred_slots, weekdays=weekdays)
+
+
+@app.route("/add_preferred", methods=["POST"])
+def add_preferred():
+    """Add a new preferred slot"""
+    weekday = request.form["weekday"]
+    start_time = request.form["start_time"]
+    end_time = request.form["end_time"]
+    
+    try:
+        preferredslots.add_preferred_slot(weekday, start_time, end_time)
+        return redirect(url_for('preferred'))
+    except ValueError as e:
+        return f"Error: {str(e)}", 400
+
+
+@app.route("/remove_preferred", methods=["POST"])
+def remove_preferred():
+    """Remove a preferred slot"""
+    weekday = request.form["weekday"]
+    start_time = request.form["start_time"]
+    end_time = request.form["end_time"]
+    
+    preferredslots.remove_preferred_slot(weekday, start_time, end_time)
+    return redirect(url_for('preferred'))
 
 
 if __name__ == '__main__':

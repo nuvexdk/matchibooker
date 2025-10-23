@@ -1,0 +1,55 @@
+<!doctype html>
+<title>Preferred Slots</title>
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='booking.css') }}">
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='main.css') }}">
+
+<div class="centeredsection">
+    <h1 class="title">Preferred Time Slots</h1>
+    <p>Configure time slots that should be automatically booked when available.</p>
+    <p>The system checks hourly for these preferred slots.</p>
+
+    <h2>Add New Preferred Slot</h2>
+    <form action="{{ url_for('add_preferred') }}" method="post">
+        <label for="weekday">Day of Week:</label>
+        <select name="weekday" id="weekday" required>
+            {% for day in weekdays %}
+            <option value="{{ day }}">{{ day.capitalize() }}</option>
+            {% endfor %}
+        </select>
+        <br><br>
+        
+        <label for="start_time">Start Time (HH:MM):</label>
+        <input type="time" name="start_time" id="start_time" required>
+        <br><br>
+        
+        <label for="end_time">End Time (HH:MM):</label>
+        <input type="time" name="end_time" id="end_time" required>
+        <br><br>
+        
+        <input type="submit" value="Add Preferred Slot">
+    </form>
+
+    <h2>Current Preferred Slots</h2>
+    {% if preferred_slots %}
+    <ul class="booking_slot_list">
+    {% for slot in preferred_slots %}
+        <li>
+            <p>-------------------------</p>
+            <p><b>{{ slot.weekday.capitalize() }}</b></p>
+            <p>{{ slot.start_time }} - {{ slot.end_time }}</p>
+            <form action="{{ url_for('remove_preferred') }}" method="post" style="display:inline;">
+                <input type="hidden" name="weekday" value="{{ slot.weekday }}">
+                <input type="hidden" name="start_time" value="{{ slot.start_time }}">
+                <input type="hidden" name="end_time" value="{{ slot.end_time }}">
+                <input type="submit" value="Remove" style="background-color: #f44336;">
+            </form>
+        </li>
+    {% endfor %}
+    </ul>
+    {% else %}
+    <p>No preferred slots configured yet.</p>
+    {% endif %}
+
+    <br>
+    <a href="/">Back to Login</a>
+</div>

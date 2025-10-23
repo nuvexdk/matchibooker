@@ -59,3 +59,36 @@ def delete_expired_slots():
             log_booking("Removed slot with date " + slot_date.strftime(default_date_format) +
                         " and time " + slot_time.strftime(default_time_format))
     db.close()
+
+
+def check_and_queue_preferred_slots(browser, preferred_date_slot_map):
+    """
+    Check if preferred slots are available and queue them for booking
+    preferred_date_slot_map: dict mapping dates to list of preferred slots
+    """
+    db = TinyDB("resources/bookingqueue.json")
+    
+    for date, preferred_slots in preferred_date_slot_map.items():
+        # Get all available slots for this date
+        available_slot_urls = browser.get_available_slot_urls(date)
+        
+        for slot_url in available_slot_urls:
+            try:
+                timeslot = TimeSlot(slot_url)
+                
+                # Check if this available slot matches any preferred slot
+                for preferred in preferred_slots:
+                    if (timeslot.start_time == preferred.start_time and 
+                        timeslot.end_time == preferred.end_time):
+                        
+                        # Check if not already in queue
+                        existing = db.search(Query().url == slot_url)
+                        if not existing:
+                            add_entry(slot_url, timeslot.date, timeslot.start_time, timeslot.end_time)
+                            log_booking(f"Auto-queued preferred slot: {preferred.weekday} {timeslot.start_time}-{timeslot.end_time} on {date}")
+                        break
+            except Exception as e:
+                log_booking(f"Error processing slot {slot_url}: {str(e)}")
+                continue
+    
+    db.close()
