@@ -1,5 +1,6 @@
 import browsing
 import slotqueue
+import preferredslots
 import sys
 import time
 from tinydb import TinyDB, Query
@@ -9,6 +10,7 @@ bookingqueue_path = "resources/bookingqueue.json"
 scheduler = BackgroundScheduler()
 purging_interval_minutes = 1
 booking_interval_minutes = 1
+preferred_slot_check_interval_minutes = 60  # Check for preferred slots every hour
 
 
 class QueueWorker:
@@ -34,6 +36,16 @@ class QueueWorker:
             else:
                 log_event("Did not book slot with url " + slot["url"])
         db.close()
+    
+    def check_preferred_slots(self):
+        """Check for available preferred slots and queue them"""
+        self.browser.matchi_login(self.username, self.password)
+        preferred_date_slot_map = preferredslots.get_upcoming_dates_for_preferred_slots(days_ahead=7)
+        if preferred_date_slot_map:
+            log_event("Checking for preferred slots...")
+            slotqueue.check_and_queue_preferred_slots(self.browser, preferred_date_slot_map)
+        else:
+            log_event("No preferred slots configured")
 
 
 def log_event(text):
@@ -56,7 +68,12 @@ if __name__ == '__main__':
     print("Purging job started with " + str(purging_interval_minutes) + " minute intervals")
     scheduler.add_job(queueWorker.try_booking, "interval", minutes=booking_interval_minutes)
     print("Booking job started with " + str(booking_interval_minutes) + " minute intervals")
+    scheduler.add_job(queueWorker.check_preferred_slots, "interval", minutes=preferred_slot_check_interval_minutes)
+    print("Preferred slot check job started with " + str(preferred_slot_check_interval_minutes) + " minute intervals")
     scheduler.start()
+
+    # Run initial check for preferred slots immediately
+    queueWorker.check_preferred_slots()
 
     # run indefinitely
     while True:
